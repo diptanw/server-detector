@@ -1,0 +1,199 @@
+openapi: 3.0.0
+info:
+  description: |
+    Detectify coding assignment
+    A Server Detection Application
+  title: server-detector API
+  version: 0.0.1
+paths:
+  /health:
+    get:
+      summary: Health check endpoint.
+      operationId: health
+      responses:
+        '200':
+          description: OK
+  /v1/openapi:
+    get:
+      summary: Returns the Open API Specification.
+      responses:
+        '200':
+          description: A YAML file
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+                format: byte
+  /v1/detects:
+    get:
+      summary: Returns all submitted detections.
+      operationId: GetDetects
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponse"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: Submits a list of hosts to detect.
+      operationId: PostDetect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  description: List of hosts to detect.
+                  type: array
+                  items:
+                    type: string
+              example:
+                data:
+                  - "blog.detectify.com"
+                  - "google.se"
+                  - "yahoo.com"
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Location:
+              description: The URI with result of accepted request.
+              schema:
+                type: string
+
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /v1/detects/{reqId}:
+    get:
+      summary: Returns the detect views for the given request id.
+      operationId: GetDetectsByRequestId
+      parameters:
+        - description: Resource identifier.
+          name: reqId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleResponse"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    Href:
+      type: object
+      title: Href is a URL.
+      properties:
+        href:
+          type: string
+    ResourceLinks:
+      type: object
+      title: ResourceLinks are the HAL links for a single resource.
+      properties:
+        Self:
+          description: A unique resource identifier self-link.
+          $ref: "#/components/schemas/Href"
+    PageLinks:
+      type: object
+      title: PageLinks are the HAL links for a paginated resources.
+      properties:
+        page:
+          description: A link to the current page result.
+          $ref: "#/components/schemas/Href"
+        self:
+          description: A unique resource identifier.
+          $ref: "#/components/schemas/Href"
+    ErrorResponse:
+      type: object
+      title: ErrorResponse is the error response.
+      properties:
+        errors:
+          description: List of errors.
+          type: array
+          items:
+            type: string
+    Detect:
+      type: object
+      title: Represents a view representation of detected hosts.
+      properties:
+        id:
+          description: The resource item's unique identifier.
+          type: string
+        requestId:
+          description: The ID of the originally submitted request.
+          type: string
+        host:
+          description: The ID of the group user is a member of.
+          type: object
+          title: Is the detected information for the requested host.
+          properties:
+            domain:
+              description: A domain name.
+              type: string
+            server:
+              description: A software information of hosted server.
+              type: string
+            ips:
+              description: List of IP addresses of the given host.
+              type: array
+              items:
+                type: string
+        createdAt:
+          description: The RFC3339 timestamp when the resource was created.
+          type: string
+          format: date-time
+        updatedAt:
+          description: The RFC3339 timestamp when the resource was updated.
+          type: string
+          format: date-time
+        links:
+          description: HAL links.
+          $ref: "#/components/schemas/ResourceLinks"
+    PageResponse:
+      type: object
+      title: Is the response type of detect list resources.
+      properties:
+        data:
+          description: List of requested resources.
+          type: array
+          items:
+            $ref: "#/components/schemas/Detect"
+        links:
+          $ref: "#/components/schemas/PageLinks"
+    SingleResponse:
+      type: object
+      title: Is the response type of single detect resource.
+      properties:
+        data:
+          description: Data representation of requested resource.
+          $ref: "#/components/schemas/Detect"
+        links:
+          $ref: "#/components/schemas/ResourceLinks"
