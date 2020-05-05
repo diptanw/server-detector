@@ -1,0 +1,7 @@
+.vscode/
+.gitignore
+.git
+.github
+*.pdf
+*.md
+Dockerfile

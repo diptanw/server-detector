@@ -1,0 +1,34 @@
+linters:
+  disable:
+    - maligned
+    - godox
+    - lll
+  enable-all: true
+  fast: false
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - errcheck
+        - dupl
+        - scopelint
+        - goconst
+        - unparam
+
+linters-settings:
+  funlen:
+    lines: 100 #60
+    statements: 55 #40
+  wsl:
+    allow-cuddle-declarations: true
+  goimports:
+    local-prefixes: github.com/diptanw/server-detector
+
+run:
+  deadline: 2m
+  tests: true
+
+service:
+  golangci-lint-version: 1.24.x # use the fixed version to not introduce new linters unexpectedly

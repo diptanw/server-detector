@@ -1,0 +1,50 @@
+version: "3.7"
+services:
+
+  commander:
+    build:
+      context: .
+      args:
+        package: commander
+    image: server-detector/commander:latest
+    depends_on:
+      - nats
+    command: "--nats-server nats://nats:4222"
+
+  querier:
+    build:
+      context: .
+      args:
+        package: querier
+    image: server-detector/querier:latest
+    depends_on:
+      - nats
+    command: "--nats-server nats://nats:4222"
+
+  gateway:
+    build:
+      context: .
+      args:
+        package: gateway
+    image: server-detector/gateway:latest
+    depends_on:
+      - querier
+      - commander
+    ports:
+      - "6080:8080"
+    command: >
+      --command-addr http://commander:8080/v1/processor
+      --query-addr http://querier:8080/v1/views
+      --api /usr/local/bin/openapi.yml
+    
+  nats:
+    image: nats:2.1-alpine3.11
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v3.25.1
+    depends_on:
+      - gateway
+    environment:
+      API_URL: "http://localhost:6080/v1/openapi"
+    ports:
+      - "6081:8080"
